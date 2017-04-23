@@ -20,11 +20,21 @@ long loopTime = 20000;
 
 MDNSResponder mdns;
 
-ESP8266WebServer server ( 80 );
+ESP8266WebServer server (80);
 
 
 byte addr[8]; 
 float temperature;
+float voltage;
+
+float getVoltage()
+{
+    float AOvar = (unsigned int) analogRead(A0);
+    AOvar = AOvar * 3130;
+    AOvar = AOvar / 1024;
+    AOvar = AOvar / 1000;
+    return AOvar;
+}
 
 
 
@@ -60,18 +70,37 @@ float getTemp()
 } 
 
 
-const int led = 13;
+
 
 
 
 void handleRoot() 
 {
-	digitalWrite ( led, 1 );
-	char temp[400];
+
+	char temp[800];
   temperature = getTemp();
+
+  //float adc_read = 678.0123;
+  const char *tmpSign = (temperature < 0) ? "-" : "";
+  float tmpVal = (temperature < 0) ? -temperature : temperature;
+
+  int tmpInt1 = tmpVal;                  // Get the integer (678).
+  float tmpFrac = tmpVal - tmpInt1;      // Get fraction (0.0123).
+  int tmpInt2 = trunc(tmpFrac * 100);    // Turn into integer (123).
+  
+  voltage = getVoltage();
+  const char *tmpSign2 = (voltage < 0) ? "-" : "";
+  float tmpVal2 = (voltage < 0) ? -voltage : voltage;
+
+  int tmpInt12 = tmpVal2;                  // Get the integer (678).
+  float tmpFrac2 = tmpVal2 - tmpInt12;     // Get fraction (0.0123).
+  int tmpInt22 = trunc(tmpFrac2 * 100);    // Turn into integer (123).
+
+  
   Serial.println(temperature);
-  int tepm= temperature;
-	snprintf ( temp, 400,
+  Serial.println(voltage);
+  //int tepm= temperature;
+	snprintf ( temp, 800,
 
   "<html>\
   <head>\
@@ -83,21 +112,23 @@ void handleRoot()
     </style>\
   </head>\
   <body>\
-    <center><h1>Температура в комнате.</h1></center>\
-    <center><p> %d градуса </p></center>\
+    <center><h1>Температура датчика</h1></center>\
+    <center><p> %s%d.%02d градуса </p></center>\
+    <center><h2>Напряжение АКБ</h2></center>\
+    <center><p> %s%d.%02d вольт </p></center>\
   </body>\
-  </html>",tepm
+  </html>",tmpSign, tmpInt1, tmpInt2, tmpSign2, tmpInt12, tmpInt22
 	);
   
 	server.send ( 200, "text/html", temp );
-	digitalWrite ( led, 0 );
+
 }
 
 
 
 void handleNotFound() 
 {
-	  digitalWrite ( led, 1 );
+
 	  String message = "File Not Found\n\n";
 	  message += "URI: ";
 	  message += server.uri();
@@ -113,15 +144,15 @@ void handleNotFound()
 	  }
 
 	  server.send ( 404, "text/plain", message );
-	  digitalWrite ( led, 0 );
+
 }
 
 
 
 void setup ( void ) 
 {
-	  pinMode ( led, OUTPUT );
-	  digitalWrite ( led, 0 );
+
+    pinMode(A0, INPUT);
 	  Serial.begin ( 115200 );
 	  WiFi.begin ( ssid, password );
 	  Serial.println ( "" );
@@ -145,7 +176,6 @@ void setup ( void )
 	  }
 
 	  server.on ( "/", handleRoot );
-	  server.on ( "/test.svg", drawGraph );
 	  server.on ( "/inline", []() 
 	  {
 		  server.send ( 200, "text/plain", "this works as well" );
@@ -179,25 +209,3 @@ void loop ( void )
 
 
 
-
-void drawGraph() 
-{
-	  String out = "";
-	  char temp[100];
-	  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
- 	  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
- 	  out += "<g stroke=\"black\">\n";
- 	  int y = rand() % 130;
-  
-  	for (int x = 10; x < 390; x+= 10) 
- 	  {
- 		  int y2 = rand() % 130;
- 		  sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
- 		  out += temp;
- 		  y = y2;
- 	  }
-  
-	  out += "</g>\n</svg>\n";
-
-	  server.send ( 200, "image/svg+xml", out);
-}
