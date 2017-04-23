@@ -30,7 +30,7 @@ float voltage;
 float getVoltage()
 {
     float AOvar = (unsigned int) analogRead(A0);
-    AOvar = AOvar * 3130;
+    AOvar = AOvar * 3383;
     AOvar = AOvar / 1024;
     AOvar = AOvar / 1000;
     return AOvar;
