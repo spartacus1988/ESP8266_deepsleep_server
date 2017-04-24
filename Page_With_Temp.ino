@@ -18,6 +18,10 @@ const int sleepTimeS = 10;
 //20 секунд штатной работы сервера
 long loopTime = 20000;  
 
+IPAddress ip(192,168,43,101);  
+IPAddress gateway(192,168,43,1);
+IPAddress subnet(255,255,255,0);
+
 MDNSResponder mdns;
 
 ESP8266WebServer server (80);
@@ -155,12 +159,13 @@ void setup ( void )
     pinMode(A0, INPUT);
 	  Serial.begin ( 115200 );
 	  WiFi.begin ( ssid, password );
+    WiFi.config(ip, gateway, subnet);
 	  Serial.println ( "" );
 
 	  // Wait for connection
 	  while ( WiFi.status() != WL_CONNECTED ) 
 	  {
-		  delay ( 500 );
+		  delay ( 100 );
 		  Serial.print ( "." );
 	  }
 
