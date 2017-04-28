@@ -67,7 +67,7 @@ void handleRoot()
   <head>\
     <meta charset='UTF-8' >\
     <meta http-equiv='refresh' content='5'/>\
-    <title>Термометр</title>\
+    <title>Вольтметр</title>\
     <style>\
       body { background-color: #dfdfdf; font-family: Arial, Helvetica, Sans-Serif; Color: #777777; }\
     </style>\
@@ -262,30 +262,25 @@ void loop ( void )
 
   if(!StateSleep)
   {
-    while(millis()-currentMillis<=loopTime)
-    {
-      //заходим 1 раз за секунду до сна 
-      if(millis()-currentMillis > (loopTime-1000))
+
+     //один раз в 5 секунд
+     if(millis()-currentMillis > 5000)
       {
         voltage = getVoltage();
-
         if(voltage > 0)
         {
           PowerOn = true;
-          digitalWrite(PowerPin , PowerOn);
-          //don't sleep in this case
-          currentMillis = millis();      
+          digitalWrite(PowerPin , PowerOn);     
         }
+        currentMillis = millis();
       }
-
       
       mdns.update();
       server.handleClient();
-    }
+  
   }
   else
   {
-    //delay(10000);
     Serial.println();
     Serial.println("closing connection");
     Serial.println("ESP8266 in sleep mode");
