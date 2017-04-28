@@ -21,6 +21,7 @@ long loopTime = 20000;
 // GPIO, куда подцелено реле
 uint8_t PowerPin = 5;
 bool    PowerOn  = false;
+bool    StateSleep  = false;
 
 IPAddress ip(192,168,8,101);  
 IPAddress gateway(192,168,8,1);
@@ -158,6 +159,55 @@ void handleRelay()
 }
 
 
+
+void handleSleep() 
+{
+  bool statsleep = false;
+
+  if( server.hasArg("statsleep") ){
+     if( strncmp(server.arg("statsleep").c_str(),"1",1) == 0 )statsleep = true;
+  }
+  else {
+     statsleep = StateSleep;
+  }
+  
+  String outsleep = "";
+
+  outsleep =
+"<html>\
+  <head>\
+    <meta charset=\"utf-8\" />\
+    <title>SLEEP STATE</title>\
+    <style>\
+      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+    </style>\
+  </head>\
+  <body>\
+    <h1>СОН</h1>\n";
+
+  if( statsleep ){
+      outsleep+="\
+    <h2>Состояние: Включено</br>\
+    <a href=\"/sleep?statsleep=0\">Выключить</a></h2>\
+    ";
+  }
+  else {
+      outsleep+="\
+    <h2>Состояние: Выключено</br>\
+    <a href=\"/sleep?statsleep=1\">Включить</a><h2>\
+    ";            
+  }
+   outsleep+= "\
+  </body>\
+</html>";
+   server.send ( 200, "text/html", outsleep );
+   if( statsleep != StateSleep ){
+      StateSleep = statsleep;
+   }
+}
+
+
+
 void setup ( void ) 
 {
     //relay
@@ -192,6 +242,7 @@ void setup ( void )
 
 	  server.on ( "/", handleRoot );
     server.on ( "/relay", handleRelay );
+    server.on ( "/sleep", handleSleep );
 	  server.on ( "/inline", []() 
 	  {
 		  server.send ( 200, "text/plain", "this works as well" );
@@ -208,18 +259,38 @@ void setup ( void )
 void loop ( void ) 
 {
     unsigned long currentMillis = millis();
- 
+
+  if(!StateSleep)
+  {
     while(millis()-currentMillis<=loopTime)
     {
+      //заходим 1 раз за секунду до сна 
+      if(millis()-currentMillis > (loopTime-1000))
+      {
+        voltage = getVoltage();
+
+        if(voltage > 0)
+        {
+          PowerOn = true;
+          digitalWrite(PowerPin , PowerOn);
+          //don't sleep in this case
+          currentMillis = millis();      
+        }
+      }
+
+      
       mdns.update();
       server.handleClient();
     }
-  
+  }
+  else
+  {
     //delay(10000);
     Serial.println();
     Serial.println("closing connection");
     Serial.println("ESP8266 in sleep mode");
     ESP.deepSleep(sleepTimeS * 1000000, WAKE_RF_DEFAULT);
+  }
     
 }
 
