@@ -18,8 +18,8 @@ const int sleepTimeS = 10;
 //20 секунд штатной работы сервера
 long loopTime = 20000;  
 
-IPAddress ip(192,168,43,101);  
-IPAddress gateway(192,168,43,1);
+IPAddress ip(192,168,8,101);  
+IPAddress gateway(192,168,8,1);
 IPAddress subnet(255,255,255,0);
 
 MDNSResponder mdns;
@@ -28,7 +28,6 @@ ESP8266WebServer server (80);
 
 
 byte addr[8]; 
-float temperature;
 float voltage;
 
 float getVoltage()
@@ -42,56 +41,11 @@ float getVoltage()
 
 
 
-
-float getTemp()
-{
-    byte data[12];  
-    if (!ds.search(addr)) 
-    {
-      Serial.println("No more addresses."); 
-      while(1);
-    }
-    ds.reset_search(); 
-    if (OneWire::crc8(addr, 7) != addr[7]) 
-    {
-      Serial.println("CRC is not valid!");
-      while(1);
-    }
-    ds.reset();            
-    ds.select(addr);        
-    ds.write(0x44);      
-    delay(1000);   
-    ds.reset();
-    ds.select(addr);    
-    ds.write(0xBE);          
-    for (int i = 0; i < 9; i++) 
-    {           
-      data[i] = ds.read();  
-    }
-    int raw = (data[1] << 8) | data[0]; 
-    if (data[7] == 0x10) raw = (raw & 0xFFF0) + 12 - data[6];  
-    return raw / 16.0;   
-} 
-
-
-
-
-
-
 void handleRoot() 
 {
 
 	char temp[800];
-  temperature = getTemp();
-
-  //float adc_read = 678.0123;
-  const char *tmpSign = (temperature < 0) ? "-" : "";
-  float tmpVal = (temperature < 0) ? -temperature : temperature;
-
-  int tmpInt1 = tmpVal;                  // Get the integer (678).
-  float tmpFrac = tmpVal - tmpInt1;      // Get fraction (0.0123).
-  int tmpInt2 = trunc(tmpFrac * 100);    // Turn into integer (123).
-  
+ 
   voltage = getVoltage();
   const char *tmpSign2 = (voltage < 0) ? "-" : "";
   float tmpVal2 = (voltage < 0) ? -voltage : voltage;
@@ -101,9 +55,7 @@ void handleRoot()
   int tmpInt22 = trunc(tmpFrac2 * 100);    // Turn into integer (123).
 
   
-  Serial.println(temperature);
   Serial.println(voltage);
-  //int tepm= temperature;
 	snprintf ( temp, 800,
 
   "<html>\
@@ -116,9 +68,7 @@ void handleRoot()
     </style>\
   </head>\
   <body>\
-    <center><h1>Температура датчика</h1></center>\
-    <center><p> %s%d.%02d градуса </p></center>\
-    <center><h2>Напряжение АКБ</h2></center>\
+    <center><h1>Напряжение АКБ</h1></center>\
     <center><p> %s%d.%02d вольт </p></center>\
   </body>\
   </html>",tmpSign, tmpInt1, tmpInt2, tmpSign2, tmpInt12, tmpInt22
