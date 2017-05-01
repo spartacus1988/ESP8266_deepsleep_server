@@ -28,6 +28,9 @@ bool    StopCharge  = false;
 IPAddress ip(192,168,8,101);  
 IPAddress gateway(192,168,8,1);
 IPAddress subnet(255,255,255,0);
+//master ip
+//const char* host = "192,168,8,200";
+const char* host = "192,168,8,100";
 
 MDNSResponder mdns;
 
@@ -260,7 +263,51 @@ void setup ( void )
 
 void loop ( void ) 
 {
-    unsigned long currentMillis = millis();
+  unsigned long currentMillis = millis();
+
+
+   
+
+  WiFiClient client;
+
+  Serial.printf("\n[Connecting to %s ... ", host);
+  if (client.connect(host, 8080))
+  {
+    Serial.println("connected]");
+
+    Serial.println("[Sending a request]");
+    client.print(String("GET /") + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Connection: close\r\n" +
+                 "\r\n"
+                );
+
+    Serial.println("[Response:]");
+    while (client.connected())
+    {
+      if (client.available())
+      {
+        String line = client.readStringUntil('\n');
+        Serial.println(line);
+      }
+    }
+    client.stop();
+    Serial.println("\n[Disconnected]");
+  }
+  else
+  {
+    Serial.println("connection failed!]");
+    client.stop();
+  }
+
+
+
+
+
+
+
+
+    
 
   if(!StateSleep)
   {
