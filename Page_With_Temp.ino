@@ -29,8 +29,8 @@ IPAddress ip(192,168,8,101);
 IPAddress gateway(192,168,8,1);
 IPAddress subnet(255,255,255,0);
 //master ip
-//const char* host = "192,168,8,200";
-const char* host = "192,168,8,100";
+//const char* host = "192.168.8.200";
+const char* host = "192.168.8.100";
 
 MDNSResponder mdns;
 
