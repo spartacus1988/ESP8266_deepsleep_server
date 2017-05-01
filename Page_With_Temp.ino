@@ -22,6 +22,8 @@ long loopTime = 20000;
 uint8_t PowerPin = 5;
 bool    PowerOn  = false;
 bool    StateSleep  = false;
+bool    FullCharge  = false;
+bool    StopCharge  = false;
 
 IPAddress ip(192,168,8,101);  
 IPAddress gateway(192,168,8,1);
@@ -267,11 +269,27 @@ void loop ( void )
      if(millis()-currentMillis > 5000)
       {
         voltage = getVoltage();
-        if(voltage > 0)
+        if(voltage > 3.30)
         {
           PowerOn = true;
-          digitalWrite(PowerPin , PowerOn);     
+          digitalWrite(PowerPin , PowerOn); 
+          FullCharge  = true;    
         }
+        else
+        {
+          FullCharge  = false; 
+        }
+
+        if(voltage > 3.50)
+        {
+          StopCharge =  true;
+        }
+        else
+        {
+           StopCharge =  false;
+        }
+
+        
         currentMillis = millis();
       }
       
