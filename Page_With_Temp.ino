@@ -34,11 +34,14 @@ const char* host = "192.168.8.100";
 
 MDNSResponder mdns;
 
+WiFiClient client;
+
 ESP8266WebServer server (80);
 
 
 byte addr[8]; 
 float voltage;
+unsigned long currentMillis;
 
 float getVoltage()
 {
@@ -213,6 +216,23 @@ void handleSleep()
 
 
 
+int parse(String input_string) 
+{
+  Serial.print ( "input_string is  " + input_string );
+  
+  if (input_string.equals("    <title>Вольтметр</title>") == true) 
+  {
+    return 10;
+  }
+  else if (input_string.equals("<title>Амперметр</title>") == true) 
+  {
+    return 11;
+  }
+  else return 0;
+}
+
+
+
 void setup ( void ) 
 {
     //relay
@@ -263,12 +283,9 @@ void setup ( void )
 
 void loop ( void ) 
 {
-  unsigned long currentMillis = millis();
+  currentMillis = millis();
 
 
-   
-
-  WiFiClient client;
 
   Serial.printf("\n[Connecting to %s ... ", host);
   if (client.connect(host, 8080))
@@ -289,6 +306,27 @@ void loop ( void )
       {
         String line = client.readStringUntil('\n');
         Serial.println(line);
+
+
+
+         switch ( parse(line)) 
+         {
+          case 10:
+            StateSleep=false;
+            Serial.println("StateSleep is false");
+            break;
+          case 11:
+            StateSleep=true;
+            Serial.println("StateSleep is true");
+            break;
+          case 0:
+            Serial.println("invalid String");
+            break;
+         }
+        
+        line = "";
+
+        
       }
     }
     client.stop();
